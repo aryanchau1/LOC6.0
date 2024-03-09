@@ -73,9 +73,7 @@ const TableHeader = styled.th`
 `;
 
 const TableRow = styled.tr`
-  &:nth-child(even) {
-    background-color: #f2f2f2;
-  }
+  
 `;
 
 const TableCell = styled.td`
@@ -117,10 +115,9 @@ function Admin() {
   const [showDialog, setShowDialog] = useState(false);
   const [imageURL, setImageURL] = useState('');
 
-  const openDialog = (url) => {
-    url = "../../../../server/uploads/"+url;
-    console.log(url);
-    setImageURL(url);
+  const openDialog = (imageName) => {
+    const imageUrl = `http://localhost:3001/uploads/${imageName}`;
+    setImageURL(imageUrl);
     setShowDialog(true);
   };
   const closeDialog = () => {
@@ -178,6 +175,7 @@ function Admin() {
         </AlertsContainer>
         <h3>{isOpen ? "Room Type" : "RT"}</h3>
         <NavDropdown value={roomType} onChange={(e) => setRoomType(e.target.value)}>
+          <option value="*">All</option>
           <option value="Single">Single</option>
           <option value="Double">Double</option>
           <option value="Family">Family</option>
@@ -198,7 +196,6 @@ function Admin() {
             <tr>
               <TableHeader>Room Number</TableHeader>
               <TableHeader>Room Type</TableHeader>
-              <TableHeader>Status</TableHeader>
               <TableHeader>Request Date</TableHeader>
               <TableHeader>Completion Date</TableHeader>
               <TableHeader>Comment</TableHeader>
@@ -213,7 +210,7 @@ function Admin() {
                 <TableCell>{table.request_date_time}</TableCell>
                 <TableCell>{table.completion_date_time}</TableCell>
                 <TableCell>{table.comment}</TableCell>
-                <TableCell>{table.messy}</TableCell>
+                <TableCell>{table.messy>0.3? "Messy":"Not Messy"}</TableCell>
                   {/* Button to approve request */}
                   <button onClick={() => handleApprove(index)}>Approve</button>
                   {/* Button to show image in dialog */}
@@ -227,7 +224,7 @@ function Admin() {
           <Dialog>
             <DialogContent>
               <img src={imageURL} alt="Room Image" />
-              <CloseButton onClick={closeDialog}>Close</CloseButton>
+              <CloseButton onClick={closeDialog}>❌</CloseButton>
             </DialogContent>
           </Dialog>
         )}

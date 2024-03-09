@@ -32,7 +32,7 @@ function RoomService() {
                     <option value="Refill">Refill</option>
                     <option value="Repair">Repair</option>
                 </select>
-                {/* Render pending requests based on selected request type */}
+                
             </RequestContainer>
         </RoomServiceContainer>
     );
