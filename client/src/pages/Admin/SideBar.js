@@ -36,7 +36,7 @@ const NavDropdown = styled.select`
   display: block;
 `;
 
-const SideBar = () => {
+const SideBar = ({ onDataFetch }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const toggleSidebar = () => {
