@@ -28,6 +28,22 @@ const storage = multer.diskStorage({
 });
 
 const uploadWithStorage = multer({ storage: storage });
+//handle fetch request by admin
+app.get("/get-tables", async (req, res) => {
+    try {
+      const roomType = req.query.roomType;
+      const query = `
+        SELECT *
+        FROM clean_req
+        WHERE room_type = ($1);
+      `;
+      const rows = await pool.query(query, [roomType]);
+  
+      res.send(rows);
+    } catch (error) {
+      console.error("Error:", error.message);
+    }
+  });
 
 // Route to handle file upload
 app.post('/photographer', uploadWithStorage.single('file'), async (req, res) => {
