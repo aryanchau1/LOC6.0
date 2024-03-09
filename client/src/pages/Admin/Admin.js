@@ -60,30 +60,108 @@ const InfoContainer = styled.div`
   font-family: monospace;
   text-align: center; /* Center text */
 `;
+const Table = styled.table`
+  border-collapse: collapse;
+  width: 80%;
+  margin: 20px auto;
+`;
+
+const TableHeader = styled.th`
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+`;
+
+const TableRow = styled.tr`
+  &:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+`;
+
+const TableCell = styled.td`
+  border: 1px solid #ddd;
+  padding: 8px;
+`;
+const Dialog = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const DialogContent = styled.div`
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+`;
 
 function Admin() {
   const [isOpen, setIsOpen] = useState(true);
+  const [tables, setTables] = useState([]);
   const [roomType, setRoomType] = useState("Single");
-  const [roomNo, setRoomNo] = useState("101");
   const [request, setRequest] = useState("Cleaner");
+  const [showDialog, setShowDialog] = useState(false);
+  const [imageURL, setImageURL] = useState('');
+
+  const openDialog = (url) => {
+    url = "../../../../server/uploads/"+url;
+    console.log(url);
+    setImageURL(url);
+    setShowDialog(true);
+  };
+  const closeDialog = () => {
+    setShowDialog(false);
+  };
+
+  const handleApprove = (index) => {
+    const updatedTables = [...tables];
+    // Update the status in the table data
+    updatedTables[index].status = 'Approved';
+    setTables(updatedTables);
+
+    // Send a request to the backend to update the status
+    axios.post("http://localhost:3001/update-status", {
+      roomId: updatedTables[index].room_number,
+      newStatus: 'Approved'
+    })
+    .then(response => {
+      // Handle response if needed
+    })
+    .catch(error => {
+      console.error(error);
+    });
+  };
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   const handleSubmit = () => {
-    // Send data to server using Axios
-    axios.post("/photographer", {
-      roomType,
-      roomNo,
-      request
+    axios.get("http://localhost:3001/get-tables", {
+        params: {
+            roomType: roomType,
+            request: request
+          }
     })
     .then(response => {
-      // Handle response if needed
-      console.log(response);
+      const {rows} = response.data;
+      setTables(rows);
     })
     .catch(error => {
-      // Handle error if needed
       console.error(error);
     });
   };
@@ -104,12 +182,6 @@ function Admin() {
           <option value="Double">Double</option>
           <option value="Family">Family</option>
         </NavDropdown>
-        <h3>{isOpen ? "Room No." : "RN"}</h3>
-        <NavDropdown value={roomNo} onChange={(e) => setRoomNo(e.target.value)}>
-          <option value="101">101</option>
-          <option value="102">102</option>
-          <option value="103">103</option>
-        </NavDropdown>
         <h3>{isOpen ? "Request Type" : "Req_T"}</h3>
         <NavDropdown value={request} onChange={(e) => setRequest(e.target.value)}>
           <option value="Cleaner">Cleaner</option>
@@ -121,7 +193,44 @@ function Admin() {
       </SidebarContainer>
       <InfoContainer>
         <h1>Welcome! Admin 👩🏻‍💼</h1>
-        {/* Other content in the admin panel */}
+        <Table>
+          <thead>
+            <tr>
+              <TableHeader>Room Number</TableHeader>
+              <TableHeader>Room Type</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader>Request Date</TableHeader>
+              <TableHeader>Completion Date</TableHeader>
+              <TableHeader>Comment</TableHeader>
+              <TableHeader>Messy</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {tables.map((table, index) => (
+              <TableRow key={index}>
+                <TableCell>{table.room_number}</TableCell>
+                <TableCell>{table.room_type}</TableCell>
+                <TableCell>{table.request_date_time}</TableCell>
+                <TableCell>{table.completion_date_time}</TableCell>
+                <TableCell>{table.comment}</TableCell>
+                <TableCell>{table.messy}</TableCell>
+                  {/* Button to approve request */}
+                  <button onClick={() => handleApprove(index)}>Approve</button>
+                  {/* Button to show image in dialog */}
+                  <button onClick={() => openDialog(table.image_url)}>Show Image</button>
+
+              </TableRow>
+            ))}
+          </tbody>
+        </Table>
+        {showDialog && (
+          <Dialog>
+            <DialogContent>
+              <img src={imageURL} alt="Room Image" />
+              <CloseButton onClick={closeDialog}>Close</CloseButton>
+            </DialogContent>
+          </Dialog>
+        )}
       </InfoContainer>
     </StyledContainer>
   );
