@@ -5,7 +5,7 @@ const pool = new Pool({
   password: "1029",
   host: "localhost",
   port: 5432,
-  database: "perntodo",
+  database: "hotel_management",
 });
 
 module.exports = pool;

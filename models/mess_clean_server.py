@@ -17,15 +17,18 @@ def preprocess_image(img):
     img = np.expand_dims(img, axis=0)  # Add batch dimension
     return img
 
-@app.route('/predict', methods=['POST'])
+@app.route('/messy_predict', methods=['POST'])
 def predict():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image uploaded'}), 400
+    data = request.get_json()
+    if 'imageUrl' not in data:
+        return jsonify({'error': 'No image URL provided'}), 400
     
-    image = request.files['image']
+    filename = data['imageUrl']
+    print(filename)
     
     try:
-        img = Image.open(io.BytesIO(image.read()))
+        # Process the image file using the filename
+        img = Image.open(f'../server/uploads/{filename}')
         img_array = preprocess_image(img)
         prediction = model.predict(img_array)
         messy = float(prediction[0][0]) 

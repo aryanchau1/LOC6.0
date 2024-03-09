@@ -90,7 +90,7 @@ function Photographer() {
   const [comment, setComment] = useState("");
   const [roomType, setRoomType] = useState("Single");
   const [roomNo, setRoomNo] = useState("101");
-  const [request, setRequest] = useState("Cleaner");
+  const [request, setRequest] = useState("BedRoom");
   const [isOpen, setIsOpen] = useState(true);
 
   const handlePhotoChange = (event) => {
@@ -154,8 +154,8 @@ function Photographer() {
         </NavDropdown>
         <h3>{isOpen ? "Request Type" : "Req_T"}</h3>
         <NavDropdown onChange={(e) => setRequest(e.target.value)}>
-          <option value="Cleaner">BedRoom</option>
-          <option value="Refill">WashRoom</option>
+          <option value="BedRoom">BedRoom</option>
+          <option value="WashRoom">WashRoom</option>
         </NavDropdown>
       </SidebarContainer>
       <InfoContainer>
