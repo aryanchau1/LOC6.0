@@ -15,14 +15,22 @@ prob_threshold = 0.2
 
 # Load messy/clean image classification model
 MODEL_PATH_MESSY = 'messycleanmodel.h5'
+MODEL_DAMAGE_DETECTION = 'DamageDetection.h5'
+MODEL_STAIN_DETECTION = 'staindetection.h5'
 model_messy = tf.keras.models.load_model(MODEL_PATH_MESSY)
+model_damage = tf.keras.models.load_model(MODEL_DAMAGE_DETECTION)
+model_stain = tf.keras.models.load_model(MODEL_STAIN_DETECTION)
 
 def preprocess_image(img):
     img = img.resize((150, 150))  # Resize the image to match model's expected sizing
     img = np.array(img) / 255.0  # Normalize pixel values
     img = np.expand_dims(img, axis=0)  # Add batch dimension
     return img
-
+def preprocess_image2(img):
+    img = img.resize((120, 120))  # Resize the image to match model's expected sizing
+    img = np.array(img) / 255.0  # Normalize pixel values
+    img = np.expand_dims(img, axis=0)  # Add batch dimension
+    return img
 @app.route('/detect_objects', methods=['POST'])
 def detect_objects():
     try:
@@ -69,6 +77,26 @@ def predict_messy():
         prediction = model_messy.predict(img_array)
         messy = float(prediction[0][0]) 
         return jsonify({'result': messy})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/damage_detection',methods=['POST'])
+def find_damage():
+    data = request.get_json()
+    if 'imageUrl' not in data:
+        return jsonify({'error': 'No image URL provided'}), 400
+    
+    filename = data['imageUrl']
+    try:
+        # Process the image file using the filename
+        img = Image.open(f'../server/uploads/{filename}')
+        img_array = preprocess_image2(img)
+        prediction1 = model_damage.predict(img_array)
+        prediction2 = model_stain.predict(img_array)
+        #damage = prediction1[0][0] 
+        stain = float(prediction2[0][0])
+        damage = float(prediction1[0][0])
+        return jsonify({'result': {'stain': stain, 'damage': damage}})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

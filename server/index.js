@@ -64,8 +64,8 @@ app.post(
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
-    const { roomType, roomNo, request, comment } = req.body;
-
+    const { roomType, roomNo, request, comment, type } = req.body;
+    console.log(type);
     if (request === "BedRoom") {
       // Call three models
       const mess_api = `http://127.0.0.1:5000/messy_predict`;
@@ -91,7 +91,6 @@ app.post(
           }
         );
         const messy = response_messy.data.result;
-        console.log(detect, messy);
         // Insert data into PostgreSQL database for messy
         const insertQuery = `
         INSERT INTO clean_req (room_number, room_type, status, image_url, request_date_time, completion_date_time, comment, messy) 
@@ -121,6 +120,7 @@ app.post(
         await pool.query(refillQuery, detect_values);
       } catch (error) {
         console.error("Error:", error.message);
+        console.log(res.data);
       }
     } else if (request === "Washroom") {
       const detect_api = `http://127.0.0.1:5000/detect_objects`;
@@ -151,8 +151,21 @@ app.post(
       } catch (e) {
         console.log(e.message);
       }
-
-      console.log("Not made yet!!");
+    } 
+    if(type === "micro") {
+      // New condition for "Micro" type
+      const damage_api = `http://127.0.0.1:5000/damage_detection`;
+      const response_damage = await axios.post(
+        damage_api,
+        { imageUrl: req.uploadedFileName },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const damage = response_damage.data;
+      console.log(damage)
     }
 
     res.json({

@@ -91,6 +91,7 @@ function Photographer() {
   const [roomType, setRoomType] = useState("Single");
   const [roomNo, setRoomNo] = useState("101");
   const [request, setRequest] = useState("BedRoom");
+  const [type, setType] = useState("");
   const [isOpen, setIsOpen] = useState(true);
 
   const handlePhotoChange = (event) => {
@@ -104,23 +105,28 @@ function Photographer() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
-  
+
     // Create a FormData object to store the form data
     const formData = new FormData();
-    formData.append('roomType', roomType);
-    formData.append('roomNo', roomNo);
-    formData.append('request', request);
-    formData.append('comment', comment);
-    formData.append('file', selectedPhoto); // Append the image file
-  
+    formData.append("roomType", roomType);
+    formData.append("roomNo", roomNo);
+    formData.append("request", request);
+    formData.append("comment", comment);
+    formData.append("type",type);
+    formData.append("file", selectedPhoto); // Append the image file
+
     try {
       // Send data to the API using Axios
-      const response = await axios.post("http://localhost:3001/photographer", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data' // Set content type to multipart/form-data
+      const response = await axios.post(
+        "http://localhost:3001/photographer",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data", // Set content type to multipart/form-data
+          },
         }
-      });
-  
+      );
+
       // Handle response if needed
       console.log("Response:", response.data);
     } catch (error) {
@@ -128,7 +134,6 @@ function Photographer() {
       console.error("Error:", error);
     }
   };
-  
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -156,6 +161,11 @@ function Photographer() {
         <NavDropdown onChange={(e) => setRequest(e.target.value)}>
           <option value="BedRoom">BedRoom</option>
           <option value="WashRoom">WashRoom</option>
+        </NavDropdown>
+        <h3>{isOpen ? "Damage Type" : "DT"}</h3>
+        <NavDropdown onChange={(e) => setType(e.target.value)}>
+          <option value="">Select Damage Type</option>
+          <option value="micro">Micro</option>
         </NavDropdown>
       </SidebarContainer>
       <InfoContainer>
