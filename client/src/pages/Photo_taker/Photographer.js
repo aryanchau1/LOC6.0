@@ -91,7 +91,6 @@ function Photographer() {
   const [roomType, setRoomType] = useState("Single");
   const [roomNo, setRoomNo] = useState("101");
   const [request, setRequest] = useState("BedRoom");
-  const [type, setType] = useState("");
   const [isOpen, setIsOpen] = useState(true);
 
   const handlePhotoChange = (event) => {
@@ -112,7 +111,6 @@ function Photographer() {
     formData.append("roomNo", roomNo);
     formData.append("request", request);
     formData.append("comment", comment);
-    formData.append("type",type);
     formData.append("file", selectedPhoto); // Append the image file
 
     try {
@@ -161,10 +159,6 @@ function Photographer() {
         <NavDropdown onChange={(e) => setRequest(e.target.value)}>
           <option value="BedRoom">BedRoom</option>
           <option value="WashRoom">WashRoom</option>
-        </NavDropdown>
-        <h3>{isOpen ? "Damage Type" : "DT"}</h3>
-        <NavDropdown onChange={(e) => setType(e.target.value)}>
-          <option value="">Select Damage Type</option>
           <option value="micro">Micro</option>
         </NavDropdown>
       </SidebarContainer>
@@ -181,7 +175,7 @@ function Photographer() {
           <img
             src={URL.createObjectURL(selectedPhoto)}
             alt="Selected Photo"
-            style={{ maxWidth: "100%", marginTop: "20px" }}
+            style={{ maxWidth: "400px", marginTop: "20px" }}
           />
         )}
         <Form onSubmit={handleSubmit}>

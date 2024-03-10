@@ -107,9 +107,23 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
+const ObjectDetectionTable = styled.table`
+  border-collapse: collapse;
+  width: 80%;
+  margin: 20px auto;
+`;
+
+const DamageDetectionTable = styled.table`
+  border-collapse: collapse;
+  width: 80%;
+  margin: 20px auto;
+`;
+
 function Admin() {
   const [isOpen, setIsOpen] = useState(true);
   const [tables, setTables] = useState([]);
+  const [objectDetectionTables, setObjectDetectionTables] = useState([]);
+  const [damageDetectionTables, setDamageDetectionTables] = useState([]);
   const [roomType, setRoomType] = useState("Single");
   const [request, setRequest] = useState("Cleaner");
   const [showDialog, setShowDialog] = useState(false);
@@ -155,8 +169,11 @@ function Admin() {
           }
     })
     .then(response => {
-      const {rows} = response.data;
-      setTables(rows);
+      const { rows, objectDetectionRows, damageDetectionRows } = response.data;
+      console.log(response.data.refill_req);
+      setTables(response.data.clean_req);
+      setObjectDetectionTables(response.data.refill_req);
+      setDamageDetectionTables(response.data.repair_req);
     })
     .catch(error => {
       console.error(error);
@@ -191,6 +208,7 @@ function Admin() {
       </SidebarContainer>
       <InfoContainer>
         <h1>Welcome! Admin 👩🏻‍💼</h1>
+        <h2>Clean Request</h2>
         <Table>
           <thead>
             <tr>
@@ -211,19 +229,66 @@ function Admin() {
                 <TableCell>{table.completion_date_time}</TableCell>
                 <TableCell>{table.comment}</TableCell>
                 <TableCell>{table.messy>0.3? "Messy":"Not Messy"}</TableCell>
-                  {/* Button to approve request */}
-                  <button onClick={() => handleApprove(index)}>Approve</button>
-                  {/* Button to show image in dialog */}
                   <button onClick={() => openDialog(table.image_url)}>Show Image</button>
 
               </TableRow>
             ))}
           </tbody>
         </Table>
+        <h2>Object Table</h2>
+        <ObjectDetectionTable>
+          <thead>
+            <tr>
+              <TableHeader>Room Number</TableHeader>
+              <TableHeader>Room Type</TableHeader>
+              <TableHeader>Upload Time</TableHeader>
+              <TableHeader>Object</TableHeader>
+              <TableHeader>Comment</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {objectDetectionTables.map((table, index) => (
+              <TableRow key={index}>
+                <TableCell>{table.room_number}</TableCell>
+                <TableCell>{table.room_type}</TableCell>
+                <TableCell>{table.upload_date_time}</TableCell>
+                <TableCell>{table.is_present}</TableCell>
+                <TableCell>{table.comment}</TableCell>
+                <button onClick={() => openDialog(table.image_url)}>Show Image</button>
+              </TableRow>
+            ))}
+          </tbody>
+        </ObjectDetectionTable>
+        <h2>Damage and Stain</h2>
+        <DamageDetectionTable>
+          <thead>
+            <tr>
+              <TableHeader>Room Number</TableHeader>
+              <TableHeader>Room Type</TableHeader>
+              <TableHeader>Request Time</TableHeader>
+              <TableHeader>Damage</TableHeader>
+              <TableHeader>Stain</TableHeader>
+              <TableHeader>Comment</TableHeader>
+            </tr>
+          </thead>
+          <tbody>
+            {damageDetectionTables.map((table, index) => (
+              <TableRow key={index}>
+                <TableCell>{table.room_number}</TableCell>
+                <TableCell>{table.room_type}</TableCell>
+                <TableCell>{table.request_date_time}</TableCell>
+                <TableCell>{table.req_stain>0.22? "Stained":"Not Stained"}</TableCell>
+                <TableCell>{table.req_break>0.22? "Broken":"Not Broken"}</TableCell>
+                <TableCell>{table.comment}</TableCell>
+                <button onClick={() => openDialog(table.image_url)}>Show Image</button>
+              </TableRow>
+            ))}
+          </tbody>
+        </DamageDetectionTable>
         {showDialog && (
           <Dialog>
             <DialogContent>
-              <img src={imageURL} alt="Room Image" />
+              <img src={imageURL} alt="Room Image" style={{ maxWidth: "400px", marginTop: "20px" }}/>
               <CloseButton onClick={closeDialog}>❌</CloseButton>
             </DialogContent>
           </Dialog>

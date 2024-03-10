@@ -4,6 +4,7 @@ const path = require("path");
 const cors = require("cors");
 const axios = require("axios");
 const pool = require("./db");
+const { table } = require("console");
 
 const app = express();
 const upload = multer({ dest: "uploads/" }); // Set the destination folder for uploaded files
@@ -28,33 +29,87 @@ const storage = multer.diskStorage({
 
 const uploadWithStorage = multer({ storage: storage });
 //handle fetch request by admin
-app.get("/get-tables", async (req, res) => {
-  try {
-    var rows = "";
-    const roomType = req.query.roomType;
-    if (roomType === "*") {
-      const query = `
+app.get("/room-service-request",async(req,res)=>{
+  const type = req.query.requestType;
+  let Rows;
+  try{
+    if(type === "Cleaner" ){
+      const cleanQuery = `
         SELECT *
         FROM clean_req
+        WHERE status = 0
         ORDER BY request_date_time DESC;
       `;
-      rows = await pool.query(query);
-    } else {
-      const query = `
+      const cleanRows = await pool.query(cleanQuery);
+      Rows =  cleanRows.rows;
+    }
+    else if(type === "Refill"){
+      const refillQuery = `
+        SELECT *
+        FROM refill_req
+        ORDER BY upload_date_time DESC;
+      `;
+      const refillRows = await pool.query(refillQuery);
+      Rows =  refillRows.rows;
+    }
+    else if(type === "Repair"){
+      const repairQuery = `
+        SELECT *
+        FROM repair_req
+        WHERE status = 0
+        ORDER BY request_date_time DESC;
+      `;
+      const repairRows = await pool.query(repairQuery);
+      Rows =  repairRows.rows;
+    }
+    res.send(Rows);
+  }catch(e){
+    res.status(500).send(e.message);
+    console.log(e.message);
+  }
+})
+app.get("/get-tables", async (req, res) => {
+  try {
+    const roomType = req.query.roomType;
+    const reqType = req.query.request;
+    let tablesData = {};
+    // Fetch data from the 'refill_req' table
+      const refillQuery = `
+        SELECT *
+        FROM refill_req
+        WHERE room_type = $1
+        ORDER BY upload_date_time DESC;
+      `;
+      const refillRows = await pool.query(refillQuery, [roomType]);
+      tablesData.refill_req = refillRows.rows;
+    
+    // Fetch data from the 'clean_req' table
+      const cleanQuery = `
         SELECT *
         FROM clean_req
-        WHERE room_type = ($1)
-        ORDER BY request_date_time DESC
-        ;
+        WHERE room_type = $1
+        ORDER BY request_date_time DESC;
       `;
-      rows = await pool.query(query, [roomType]);
-    }
+      const cleanRows = await pool.query(cleanQuery, [roomType]);
+      tablesData.clean_req = cleanRows.rows;
+    
+    // Fetch data from the 'repair_req' table
+      const repairQuery = `
+        SELECT *
+        FROM repair_req
+        WHERE room_type = $1
+        ORDER BY request_date_time DESC;
+      `;
+      const repairRows = await pool.query(repairQuery, [roomType]);
+      tablesData.repair_req = repairRows.rows;
 
-    res.send(rows);
+    res.send(tablesData);
   } catch (error) {
     console.error("Error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // Route to handle file upload
 app.post(
@@ -152,21 +207,40 @@ app.post(
         console.log(e.message);
       }
     } 
-    if(type === "micro") {
-      // New condition for "Micro" type
-      const damage_api = `http://127.0.0.1:5000/damage_detection`;
-      const response_damage = await axios.post(
-        damage_api,
-        { imageUrl: req.uploadedFileName },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const damage = response_damage.data;
-      console.log(damage)
+    if (request === "micro") {
+      try {
+        const damage_api = `http://127.0.0.1:5000/damage_detection`;
+        const response_damage = await axios.post(
+          damage_api,
+          { imageUrl: req.uploadedFileName },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const damage = response_damage.data;
+        console.log(damage);
+        const damageQuery = `
+          INSERT INTO repair_req (room_number, room_type, status, request_date_time, completion_date_time, image_url, comment, req_stain, req_break)
+          VALUES ($1, $2, 0, CURRENT_TIMESTAMP, null, $3, $4, $5, $6)
+        `;
+        const damage_values = [
+          roomNo,
+          roomType,
+          req.uploadedFileName,
+          comment,
+          damage.result.stain,
+          damage.result.damage,
+        ];
+        await pool.query(damageQuery, damage_values);
+      } catch (error) {
+        console.error("Error:", error.message);
+        // Handle error appropriately, such as sending an error response
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
     }
+    
 
     res.json({
       filename: req.uploadedFileName, // Send the uploaded filename in the response
